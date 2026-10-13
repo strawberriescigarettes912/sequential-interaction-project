@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hello</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --glow: #ffe7a3;
+      --text: #fff8e6;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      background: #120d08 url("dea849434875788dc207f1177a01286a.jpg") center / cover no-repeat fixed;
+      font-family: "Cormorant Garamond", Georgia, serif;
+      color: var(--text);
+      overflow: hidden;
+    }
+    .veil {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at 60% 45%, transparent 30%, rgba(10, 6, 2, 0.55) 100%);
+    }
+    main {
+      position: relative;
+      height: 100%;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 0 16px 12vh;
+    }
+    h1 {
+      font-style: italic;
+      font-weight: 500;
+      font-size: clamp(4rem, 14vw, 10rem);
+      letter-spacing: 0.02em;
+      text-shadow: 0 0 12px var(--glow), 0 0 40px rgba(255, 200, 90, 0.7), 0 4px 18px rgba(0, 0, 0, 0.6);
+      animation: shimmer 4s ease-in-out infinite, rise 1.6s ease-out both;
+    }
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(24px); filter: blur(6px); }
+      to   { opacity: 1; transform: none; filter: none; }
+    }
+    @keyframes shimmer {
+      0%, 100% { text-shadow: 0 0 12px var(--glow), 0 0 40px rgba(255, 200, 90, 0.7), 0 4px 18px rgba(0, 0, 0, 0.6); }
+      50%      { text-shadow: 0 0 20px var(--glow), 0 0 70px rgba(255, 210, 110, 0.9), 0 4px 18px rgba(0, 0, 0, 0.6); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      h1 { animation: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="veil"></div>
+  <main>
+    <h1>Hello!</h1>
+  </main>
+</body>
+</html>
