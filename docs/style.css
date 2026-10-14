@@ -1,0 +1,20 @@
+/* One dark look on purpose (as in the studies): dim room, vignette, film grain, shaky ink lines. Grayscale only. */
+:root{
+  --bg:#161514;--ink:#070707;--ground:#0e0d0d;
+  --soil:#3b3937;--soil-hi:#55524f;--grain:#8f8c88;--wet:#1f1e1d;
+  --seed:#9b9894;--sclera:#d9d7d3;
+  --can:#6e6b67;--can-hi:#8f8c88;--drop:#a9a6a2;
+  --stem:#7d7a76;--leaf:#9b9894;
+  --petal:#8e8c89;--petal-back:#5e5c5a;--petal-hi:#b9b7b3;--dust:#a8a6a2;
+  --btn:#232221;--btn-fg:#cfcdc9;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);overflow:hidden;font:14px -apple-system,BlinkMacSystemFont,sans-serif}
+canvas{display:block;width:100%;height:100%;touch-action:none}
+#reset{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:40px;height:40px;border-radius:50%;border:1px solid #4a4846;background:var(--btn);color:var(--btn-fg);font-size:18px;cursor:pointer}
+#reset:focus-visible{outline:2px solid var(--btn-fg);outline-offset:2px}
+#hint{position:fixed;left:50%;bottom:calc(26px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);margin:0;max-width:calc(100% - 140px);text-align:center;
+  font:italic 16px Georgia,"Times New Roman",serif;letter-spacing:.04em;color:var(--btn-fg);opacity:0;transition:opacity 1.2s;pointer-events:none;white-space:nowrap}
+#hint.on{opacity:.55}
