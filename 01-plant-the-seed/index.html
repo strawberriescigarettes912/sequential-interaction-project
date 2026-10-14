@@ -1,0 +1,93 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Plant the Seed</title>
+<style>
+/* Single dark look on purpose: dim room, vignette, film grain, shaky ink lines. Grayscale only. */
+:root{--bg:#161514;--ink:#070707;--soil:#3b3937;--soil-hi:#55524f;--grain:#8f8c88;--seed:#9b9894;--sclera:#d9d7d3;--ground:#0e0d0d;--btn:#232221;--btn-fg:#cfcdc9;color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);overflow:hidden}
+canvas{display:block;width:100%;height:100%;touch-action:none;cursor:pointer}
+#reset{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:40px;height:40px;border-radius:50%;border:1px solid #4a4846;background:var(--btn);color:var(--btn-fg);font-size:18px;cursor:pointer}
+#reset:focus-visible{outline:2px solid var(--btn-fg);outline-offset:2px}
+</style>
+<canvas id="c"></canvas>
+<button id="reset" aria-label="Reset">↺</button>
+<script>
+const c=document.getElementById('c'),x=c.getContext('2d');
+const V=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const C={};['--bg','--ink','--soil','--soil-hi','--grain','--seed','--sclera','--ground'].forEach(k=>C[k]=V(k));
+let W,H,cx,gy,speck=[];
+const rnd=n=>{const s=Math.sin(n*127.1)*43758.5453;return s-Math.floor(s)};
+function size(){const d=devicePixelRatio||1;W=innerWidth;H=innerHeight;c.width=W*d;c.height=H*d;x.setTransform(d,0,0,d,0,0);cx=W/2;gy=H*0.62;
+ speck=[];for(let i=0;i<220;i++)speck.push({x:Math.random()*W,y:gy-70+Math.random()*(H-gy+70),s:Math.random()*2+1,l:Math.random()<.5})}
+addEventListener('resize',size);size();
+const g=document.createElement('canvas');g.width=g.height=160;const gx=g.getContext('2d');
+function grain(){const im=gx.createImageData(160,160);for(let i=0;i<im.data.length;i+=4){const v=Math.random()*255;im.data[i]=im.data[i+1]=im.data[i+2]=v;im.data[i+3]=255}gx.putImageData(im,0,0)}
+grain();
+let p,holding,done,grains,t,eye,boil,shake;
+function reset(){p=0;holding=false;done=false;grains=[];t=0;eye=0;boil=0;shake=0}
+reset();document.getElementById('reset').onclick=reset;
+const moundH=()=>44+p*12;
+const surf=X=>gy-moundH()*Math.exp(-(((X-cx)/85)**2));
+const ease=v=>v<.5?2*v*v:1-((-2*v+2)**2)/2;
+const onMound=e=>Math.abs(e.clientX-cx)<160&&e.clientY>surf(e.clientX)-70&&e.clientY<gy+90;
+c.addEventListener('pointerdown',e=>{if(done||!onMound(e))return;holding=true;c.setPointerCapture(e.pointerId)});
+const up=()=>holding=false;c.addEventListener('pointerup',up);c.addEventListener('pointercancel',up);
+c.addEventListener('pointermove',e=>{if(holding&&!onMound(e))holding=false});
+let last=performance.now(),gt=0,bt=0;
+function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;t+=dt;gt+=dt;bt+=dt;
+ if(gt>.09){grain();gt=0} if(bt>.16){boil++;bt=0}
+ if(!done){
+  if(holding){p=Math.min(1,p+dt*.28);shake=1;
+   for(let i=0;i<3;i++){const sd=Math.random()<.5?-1:1,X=cx+sd*(25+Math.random()*75);grains.push({x:X,y:surf(X)-2,vx:-sd*(20+Math.random()*40),vy:-Math.random()*20,l:1})}}
+  else if(p>0)p=Math.max(0,p-dt*.18); // let go early: the seed creeps back up
+  if(p>=1){done=true;holding=false;eye=0.001}}
+ shake*=Math.pow(.01,dt);
+ x.fillStyle=C['--bg'];x.fillRect(0,0,W,H);
+ // seed (drawn first so soil covers it once buried)
+ const top=surf(cx)-14,bot=gy+30,sy=top+(bot-top)*ease(p);
+ const idle=!holding&&!done&&p<.02?Math.sin(t*2)*2:0,jx=shake*(Math.random()-.5)*3;
+ x.save();x.translate(cx+jx,sy+idle);x.rotate(-.25+Math.sin(t*1.7)*.04);
+ x.fillStyle=C['--seed'];x.strokeStyle=C['--ink'];x.lineWidth=2.5;
+ x.beginPath();x.ellipse(0,0,10+(rnd(boil)-.5),16+(rnd(boil+3)-.5),0,0,7);x.fill();x.stroke();
+ x.lineWidth=1.2;x.beginPath();x.moveTo(-1,-12);x.quadraticCurveTo(4+(rnd(boil+5)-.5)*2,0,-1,12);x.stroke();
+ x.restore();
+ // soil mound with a shaky ink edge
+ x.beginPath();x.moveTo(0,H);for(let X=0;X<=W;X+=8)x.lineTo(X,surf(X)+(rnd(X*.1+boil)-.5)*2.2);x.lineTo(W,H);x.closePath();
+ x.fillStyle=C['--soil'];x.fill();x.strokeStyle=C['--ink'];x.lineWidth=2.5;x.stroke();
+ for(const s of speck){if(s.y>surf(s.x)+4){x.fillStyle=s.l?C['--soil-hi']:C['--ink'];x.fillRect(s.x,s.y,s.s,s.s)}}
+ // hatching on the mound
+ x.strokeStyle=C['--ink'];x.globalAlpha=.5;x.lineWidth=1;x.beginPath();
+ for(let k=0;k<9;k++){const X=cx-70+k*17,y0=surf(X)+8;x.moveTo(X+(rnd(k+boil)-.5)*2,y0);x.lineTo(X-8,y0+14)}x.stroke();x.globalAlpha=1;
+ // dent where you press
+ if(holding){x.strokeStyle=C['--ink'];x.lineWidth=2;x.beginPath();x.ellipse(cx,surf(cx)+5,28-p*12,5,0,0,Math.PI);x.stroke()}
+ // falling grains
+ x.fillStyle=C['--grain'];
+ grains=grains.filter(q=>{q.vy+=300*dt;q.x+=q.vx*dt;q.y+=q.vy*dt;q.l-=dt*1.4;if(q.y>surf(q.x)+3||q.l<=0)return false;x.fillRect(q.x,q.y,2.5,2.5);return true});
+ // once buried: an eye opens in the soil, blinks once, then sinks shut
+ if(done){eye+=dt;const ey=surf(cx)+26,k=eye<.6?eye/.6:eye<1.4?1:eye<1.6?1-(eye-1.4)/.2:eye<1.8?(eye-1.6)/.2:eye<3?1:Math.max(0,1-(eye-3)/.8);
+  x.strokeStyle=C['--ink'];x.lineWidth=2;
+  if(k>.03){x.save();x.beginPath();x.ellipse(cx,ey,18,10*k,0,0,7);x.clip();x.fillStyle=C['--sclera'];x.fillRect(cx-20,ey-12,40,24);
+   x.fillStyle=C['--ink'];x.beginPath();x.arc(cx,ey,5.5,0,7);x.fill();x.restore();x.beginPath();x.ellipse(cx,ey,18,10*k,0,0,7);x.stroke()}
+  else{x.beginPath();x.moveTo(cx-18,ey);x.quadraticCurveTo(cx,ey+4,cx+18,ey);x.stroke()}}
+ // vignette + grain
+ const vg=x.createRadialGradient(W/2,H*.5,Math.min(W,H)*.2,W/2,H*.5,Math.max(W,H)*.75);
+ vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.85)');x.fillStyle=vg;x.fillRect(0,0,W,H);
+ x.globalAlpha=.07;x.fillStyle=x.createPattern(g,'repeat');x.fillRect(0,0,W,H);x.globalAlpha=1;
+ requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+</script>
+
+<a id="next" href="../02-water-the-sprout/index.html" hidden>Water the sprout →</a>
+<a id="home" href="../index.html" aria-label="Back to the garden">✦</a>
+<style>
+#next{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);padding:10px 22px;border:1px solid #4a4846;border-radius:999px;background:#232221;color:#cfcdc9;font:15px Georgia,serif;font-style:italic;text-decoration:none;animation:nextIn 1.2s ease-out both}
+#next:focus-visible,#home:focus-visible{outline:2px solid #cfcdc9;outline-offset:2px}
+#home{position:fixed;left:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:40px;height:40px;display:grid;place-items:center;border-radius:50%;border:1px solid #4a4846;background:#232221;color:#cfcdc9;font-size:16px;text-decoration:none}
+@keyframes nextIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+</style>
+<script>
+// Sequencing: once the study's `done` flag is set, let its ending play, then offer the next scene.
+(()=>{const n=document.getElementById('next');let since=0;
+ setInterval(()=>{if(!done){since=0;n.hidden=true;return}if(!since)since=Date.now();if(Date.now()-since>4000)n.hidden=false},250)})();
+</script>
+</body></html>

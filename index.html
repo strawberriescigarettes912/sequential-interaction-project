@@ -3,43 +3,90 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Hello</title>
+  <title>The Enchanted Garden</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500&display=swap" rel="stylesheet">
   <style>
     :root {
       --glow: #ffe7a3;
       --text: #fff8e6;
+      --muted: #e9dcc0;
+      --card: rgba(20, 13, 6, 0.55);
+      --card-hover: rgba(40, 26, 10, 0.7);
+      --line: rgba(255, 220, 140, 0.35);
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { height: 100%; }
+    html, body { min-height: 100%; }
     body {
       background: #120d08 url("dea849434875788dc207f1177a01286a.jpg") center / cover no-repeat fixed;
       font-family: "Cormorant Garamond", Georgia, serif;
       color: var(--text);
-      overflow: hidden;
     }
     .veil {
       position: fixed;
       inset: 0;
-      background: radial-gradient(ellipse at 60% 45%, transparent 30%, rgba(10, 6, 2, 0.55) 100%);
+      background:
+        radial-gradient(ellipse at 60% 40%, transparent 25%, rgba(10, 6, 2, 0.6) 100%),
+        linear-gradient(to bottom, transparent 45%, rgba(10, 6, 2, 0.75) 100%);
+      pointer-events: none;
     }
     main {
       position: relative;
-      height: 100%;
+      min-height: 100vh;
       display: flex;
-      align-items: flex-end;
-      justify-content: center;
-      padding: 0 16px 12vh;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 28px;
+      padding: 40px 16px 9vh;
+      text-align: center;
     }
     h1 {
       font-style: italic;
       font-weight: 500;
-      font-size: clamp(4rem, 14vw, 10rem);
-      letter-spacing: 0.02em;
+      font-size: clamp(3rem, 10vw, 7rem);
+      line-height: 1;
       text-shadow: 0 0 12px var(--glow), 0 0 40px rgba(255, 200, 90, 0.7), 0 4px 18px rgba(0, 0, 0, 0.6);
       animation: shimmer 4s ease-in-out infinite, rise 1.6s ease-out both;
     }
+    .lede {
+      font-size: clamp(1.1rem, 2.6vw, 1.4rem);
+      color: var(--muted);
+      max-width: 34ch;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+      animation: rise 1.6s 0.3s ease-out both;
+    }
+    ol {
+      list-style: none;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      width: 100%;
+      max-width: 820px;
+      animation: rise 1.6s 0.6s ease-out both;
+    }
+    ol a {
+      display: block;
+      height: 100%;
+      padding: 18px 16px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--card);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      color: inherit;
+      text-decoration: none;
+      transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
+    }
+    ol a:hover, ol a:focus-visible {
+      background: var(--card-hover);
+      transform: translateY(-3px);
+      box-shadow: 0 0 24px rgba(255, 210, 110, 0.35);
+      outline: none;
+    }
+    .num { font-size: 0.95rem; color: var(--glow); letter-spacing: 0.15em; }
+    .name { display: block; font-size: 1.6rem; font-style: italic; margin: 4px 0 6px; }
+    .how { font-size: 1.05rem; color: var(--muted); }
     @keyframes rise {
       from { opacity: 0; transform: translateY(24px); filter: blur(6px); }
       to   { opacity: 1; transform: none; filter: none; }
@@ -48,15 +95,38 @@
       0%, 100% { text-shadow: 0 0 12px var(--glow), 0 0 40px rgba(255, 200, 90, 0.7), 0 4px 18px rgba(0, 0, 0, 0.6); }
       50%      { text-shadow: 0 0 20px var(--glow), 0 0 70px rgba(255, 210, 110, 0.9), 0 4px 18px rgba(0, 0, 0, 0.6); }
     }
+    @media (max-width: 640px) {
+      ol { grid-template-columns: 1fr; }
+      main { justify-content: center; }
+    }
     @media (prefers-reduced-motion: reduce) {
-      h1 { animation: none; }
+      h1, .lede, ol { animation: none; }
+      ol a { transition: none; }
     }
   </style>
 </head>
 <body>
   <div class="veil"></div>
   <main>
-    <h1>Hello!</h1>
+    <h1>The Enchanted Garden</h1>
+    <p class="lede">Three small spells, one after another. Plant a seed, water it, and wake what grows.</p>
+    <ol>
+      <li><a href="01-plant-the-seed/index.html">
+        <span class="num">I</span>
+        <span class="name">Plant the Seed</span>
+        <span class="how">Press and hold the soil</span>
+      </a></li>
+      <li><a href="02-water-the-sprout/index.html">
+        <span class="num">II</span>
+        <span class="name">Water the Sprout</span>
+        <span class="how">Drag the watering can</span>
+      </a></li>
+      <li><a href="03-wake-the-flower/index.html">
+        <span class="num">III</span>
+        <span class="name">Wake the Flower</span>
+        <span class="how">Circle slowly around it</span>
+      </a></li>
+    </ol>
   </main>
 </body>
 </html>

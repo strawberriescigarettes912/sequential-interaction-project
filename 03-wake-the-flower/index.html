@@ -1,0 +1,127 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Wake the Flower</title>
+<style>
+/* Single dark look on purpose: dim room, vignette, film grain, shaky ink lines. Grayscale only. */
+:root{--bg:#161514;--ink:#070707;--petal:#8e8c89;--petal-back:#5e5c5a;--petal-hi:#b9b7b3;--stem:#4a4846;--sclera:#d9d7d3;--ground:#0e0d0d;--dust:#a8a6a2;--btn:#232221;--btn-fg:#cfcdc9;color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);overflow:hidden}
+canvas{display:block;width:100%;height:100%;touch-action:none;cursor:crosshair}
+#reset{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:40px;height:40px;border-radius:50%;border:1px solid #4a4846;background:var(--btn);color:var(--btn-fg);font-size:18px;cursor:pointer}
+#reset:focus-visible{outline:2px solid var(--btn-fg);outline-offset:2px}
+</style>
+<canvas id="c"></canvas>
+<button id="reset" aria-label="Reset">↺</button>
+<script>
+const c=document.getElementById('c'),x=c.getContext('2d');
+const V=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const C={};['--bg','--ink','--petal','--petal-back','--petal-hi','--stem','--sclera','--ground','--dust'].forEach(k=>C[k]=V(k));
+let W,H,fx,fy,gy;
+function size(){const d=devicePixelRatio||1;W=innerWidth;H=innerHeight;c.width=W*d;c.height=H*d;x.setTransform(d,0,0,d,0,0);fx=W/2;fy=H*0.4;gy=H*0.82}
+addEventListener('resize',size);size();
+// film grain
+const g=document.createElement('canvas');g.width=g.height=160;const gx=g.getContext('2d');
+function grain(){const im=gx.createImageData(160,160);for(let i=0;i<im.data.length;i+=4){const v=Math.random()*255;im.data[i]=im.data[i+1]=im.data[i+2]=v;im.data[i+3]=255}gx.putImageData(im,0,0)}
+grain();
+const rnd=n=>{const s=Math.sin(n*127.1)*43758.5453;return s-Math.floor(s)};
+let open,shown,lastA,lastT,trail,shy,done,t,dust,near,mouse,blink,nextBlink,twitch,boil,inside;
+function reset(){open=0;shown=0;lastA=null;trail=[];shy=0;done=false;t=0;dust=[];near=0;mouse={x:fx,y:fy+200};blink=0;nextBlink=2;twitch=0;boil=0;inside=false}
+reset();document.getElementById('reset').onclick=reset;
+c.addEventListener('pointermove',e=>{
+ mouse={x:e.clientX,y:e.clientY};
+ const dx=e.clientX-fx,dy=e.clientY-fy,r=Math.hypot(dx,dy),now=performance.now()/1000;
+ if(r<30||r>260){lastA=null;inside=false;return}
+ if(!inside){inside=true;twitch=1}
+ near=1;trail.push({x:e.clientX,y:e.clientY,l:1});
+ const a=Math.atan2(dy,dx);
+ if(lastA!==null&&!done){let d=a-lastA;if(d>Math.PI)d-=2*Math.PI;if(d<-Math.PI)d+=2*Math.PI;
+  const sp=Math.abs(d)/Math.max(.008,now-lastT);
+  if(sp>9){shy=1;open=Math.max(0,open-0.035)} // too fast: it snaps shut
+  else open=Math.min(1,open+Math.abs(d)/(2*Math.PI)*0.3)}
+ lastA=a;lastT=now});
+c.addEventListener('pointerleave',()=>{lastA=null;inside=false});
+const ease=v=>1-Math.pow(1-v,3),lerp=(a,b,k)=>a+(b-a)*k;
+function petal(L,w,seed,fill){const j=k=>(rnd(seed*13+k+boil*7)-.5)*Math.max(2,w*.12);
+ x.beginPath();x.moveTo(0,0);
+ x.bezierCurveTo(-w*.95+j(1),-L*.2+j(2),-w*.55+j(3),-L*.85+j(4),j(5),-L);
+ x.bezierCurveTo(w*.55+j(6),-L*.85+j(7),w*.95+j(8),-L*.2+j(9),0,0);
+ x.fillStyle=fill;x.fill();x.strokeStyle=C['--ink'];x.lineWidth=2;x.stroke();
+ // ink hatching near the base
+ x.lineWidth=1;x.globalAlpha=.55;x.beginPath();
+ for(let k=0;k<5;k++){const sx=(k-2)*w*.18;x.moveTo(sx+j(10+k),-L*.06);x.lineTo(sx*.6+j(20+k),-L*(.3+rnd(seed+k)*.15))}
+ x.stroke();x.globalAlpha=1}
+let last=performance.now(),gt=0,bt=0;
+function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;t+=dt;gt+=dt;bt+=dt;
+ if(gt>.09){grain();gt=0} if(bt>.16){boil++;bt=0}
+ shown+=(open-shown)*Math.min(1,dt*2.2);
+ if(open>=1&&!done){done=true;for(let i=0;i<40;i++)dust.push({x:fx,y:fy,vx:(Math.random()-.5)*120,vy:-Math.random()*80,l:2+Math.random()*2})}
+ shy*=Math.pow(.04,dt);near*=Math.pow(.2,dt);twitch*=Math.pow(.01,dt);
+ const o=ease(Math.max(0,shown-shy*.25));
+ x.fillStyle=C['--bg'];x.fillRect(0,0,W,H);
+ // ground
+ x.fillStyle=C['--ground'];x.beginPath();x.moveTo(0,H);x.lineTo(0,gy+4);for(let X=0;X<=W;X+=40)x.lineTo(X,gy+(rnd(X+boil)-.5)*4);x.lineTo(W,H);x.fill();
+ // wobbly guide ring
+ if(near>.02&&!done){x.strokeStyle=C['--dust'];x.globalAlpha=near*.3;x.lineWidth=1;x.setLineDash([2,7]);x.beginPath();x.arc(fx,fy,130+(rnd(boil)-.5)*3,0,7);x.stroke();x.setLineDash([]);x.globalAlpha=1}
+ // ink-speck trail
+ x.fillStyle=C['--dust'];trail=trail.filter(p=>{p.l-=dt*1.4;x.globalAlpha=Math.max(0,p.l)*.4;x.fillRect(p.x,p.y,2,2);return p.l>0});x.globalAlpha=1;
+ // head: hangs down when asleep, lifts up as it wakes
+ const jit=(shy+twitch*.6)*(Math.random()-.5)*6,sway=Math.sin(t*.9)*(3+o*3);
+ const hx=fx+lerp(46,0,o)+sway+jit, hy=lerp(fy+70,fy,o);
+ const rot=lerp(2.5,0,o)+Math.sin(t*1.3)*.04+shy*(Math.random()-.5)*.3;
+ const sc=lerp(.9,1.45,o);
+ // crooked stem with thorns
+ x.strokeStyle=C['--stem'];x.lineWidth=5;x.lineCap='round';
+ const cpx=fx+lerp(70,-10,o),cpy=lerp(fy-20,(gy+fy)/2,o);
+ x.beginPath();x.moveTo(fx-4,gy);x.quadraticCurveTo(cpx,cpy,hx,hy);x.stroke();
+ x.strokeStyle=C['--ink'];x.lineWidth=2;
+ for(let k=1;k<5;k++){const s=k/5,px=(1-s)**2*(fx-4)+2*(1-s)*s*cpx+s*s*hx,py=(1-s)**2*gy+2*(1-s)*s*cpy+s*s*hy,d=k%2?1:-1;x.beginPath();x.moveTo(px,py);x.lineTo(px+d*9,py-6);x.stroke()}
+ x.save();x.translate(hx,hy);x.rotate(rot);x.scale(sc,sc);
+ const N=8,spread=lerp(.1,Math.PI*2/N,o),L=lerp(46,82,o),w=lerp(16,30,o);
+ // sepals (visible mostly when closed)
+ x.globalAlpha=1-o*.7;for(const s of[-1,0,1]){x.save();x.rotate(s*.5+Math.PI);petal(22,8,40+s,C['--stem']);x.restore()}x.globalAlpha=1;
+ for(let pass=0;pass<2;pass++)for(let i=0;i<N;i++){
+  const back=i%2===0;if((pass===0)!==back)continue;
+  const a=(i-(N-1)/2)*spread+Math.sin(t*.7+i)*.03*o;
+  x.save();x.rotate(a);petal(L*(back?1.05:.95),w,i,back?C['--petal-back']:(i%3?C['--petal']:C['--petal-hi']));x.restore()}
+ x.restore();
+ // the eye in the middle
+ if(o>.45){const k=(o-.45)/.55,er=17*sc*k;
+  if(done){nextBlink-=dt;if(nextBlink<0){blink=1;nextBlink=2.5+Math.random()*3}}
+  blink=Math.max(0,blink-dt*5);
+  const lid=Math.max(0,(shy>.3?0:1)*k*(1-Math.sin(blink*Math.PI)));
+  x.save();x.translate(hx,hy);
+  x.fillStyle=C['--ink'];x.beginPath();x.ellipse(0,0,er+5,er*.75+5,0,0,7);x.fill();
+  if(lid>.03){x.save();x.beginPath();x.ellipse(0,0,er,er*.7*lid,0,0,7);x.clip();
+   x.fillStyle=C['--sclera'];x.fillRect(-er,-er,er*2,er*2);
+   const ang=Math.atan2(mouse.y-hy,mouse.x-hx),dist=Math.min(er*.45,Math.hypot(mouse.x-hx,mouse.y-hy)*.05);
+   const px=Math.cos(ang)*dist,py=Math.sin(ang)*dist;
+   x.fillStyle=C['--petal-back'];x.beginPath();x.arc(px,py,er*.55,0,7);x.fill();
+   x.fillStyle=C['--ink'];x.beginPath();x.arc(px,py,er*.28,0,7);x.fill();
+   x.fillStyle=C['--sclera'];x.beginPath();x.arc(px-er*.12,py-er*.14,er*.08,0,7);x.fill();
+   x.restore()}
+  x.strokeStyle=C['--ink'];x.lineWidth=2;x.beginPath();x.ellipse(0,0,er,er*.7*Math.max(lid,.04),0,0,7);x.stroke();
+  x.restore()}
+ // dust drifting after it wakes
+ x.fillStyle=C['--dust'];dust=dust.filter(p=>{p.l-=dt;p.vy-=8*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=.98;x.globalAlpha=Math.max(0,Math.min(1,p.l))*.5;x.fillRect(p.x,p.y,2,2);return p.l>0});x.globalAlpha=1;
+ if(done&&Math.random()<dt*4)dust.push({x:hx+(Math.random()-.5)*60,y:hy,vx:(Math.random()-.5)*20,vy:-10-Math.random()*20,l:3});
+ // vignette + grain
+ const vg=x.createRadialGradient(W/2,H*.45,Math.min(W,H)*.2,W/2,H*.45,Math.max(W,H)*.75);
+ vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.85)');x.fillStyle=vg;x.fillRect(0,0,W,H);
+ x.globalAlpha=.07;x.fillStyle=x.createPattern(g,'repeat');x.fillRect(0,0,W,H);x.globalAlpha=1;
+ requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+</script>
+
+<a id="next" href="../index.html" hidden>Return to the garden ✦</a>
+<a id="home" href="../index.html" aria-label="Back to the garden">✦</a>
+<style>
+#next{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);padding:10px 22px;border:1px solid #4a4846;border-radius:999px;background:#232221;color:#cfcdc9;font:15px Georgia,serif;font-style:italic;text-decoration:none;animation:nextIn 1.2s ease-out both}
+#next:focus-visible,#home:focus-visible{outline:2px solid #cfcdc9;outline-offset:2px}
+#home{position:fixed;left:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:40px;height:40px;display:grid;place-items:center;border-radius:50%;border:1px solid #4a4846;background:#232221;color:#cfcdc9;font-size:16px;text-decoration:none}
+@keyframes nextIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+</style>
+<script>
+// Sequencing: once the study's `done` flag is set, let its ending play, then offer the next scene.
+(()=>{const n=document.getElementById('next');let since=0;
+ setInterval(()=>{if(!done){since=0;n.hidden=true;return}if(!since)since=Date.now();if(Date.now()-since>4000)n.hidden=false},250)})();
+</script>
+</body></html>

@@ -1,0 +1,108 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Water the Sprout</title>
+<style>
+/* Single dark look on purpose: dim room, vignette, film grain, shaky ink lines. Grayscale only. */
+:root{--bg:#161514;--ink:#070707;--soil:#3b3937;--wet:#1f1e1d;--can:#6e6b67;--can-hi:#8f8c88;--drop:#a9a6a2;--stem:#7d7a76;--leaf:#9b9894;--btn:#232221;--btn-fg:#cfcdc9;color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);overflow:hidden}
+canvas{display:block;width:100%;height:100%;touch-action:none}
+#reset{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:40px;height:40px;border-radius:50%;border:1px solid #4a4846;background:var(--btn);color:var(--btn-fg);font-size:18px;cursor:pointer}
+#reset:focus-visible{outline:2px solid var(--btn-fg);outline-offset:2px}
+</style>
+<canvas id="c"></canvas>
+<button id="reset" aria-label="Reset">↺</button>
+<script>
+const c=document.getElementById('c'),x=c.getContext('2d');
+const V=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const C={};['--bg','--ink','--soil','--wet','--can','--can-hi','--drop','--stem','--leaf'].forEach(k=>C[k]=V(k));
+let W,H,cx,gy;
+const rnd=n=>{const s=Math.sin(n*127.1)*43758.5453;return s-Math.floor(s)};
+function size(){const d=devicePixelRatio||1;W=innerWidth;H=innerHeight;c.width=W*d;c.height=H*d;x.setTransform(d,0,0,d,0,0);cx=W/2;gy=H*0.74}
+addEventListener('resize',size);size();
+const g=document.createElement('canvas');g.width=g.height=160;const gx=g.getContext('2d');
+function grain(){const im=gx.createImageData(160,160);for(let i=0;i<im.data.length;i+=4){const v=Math.random()*255;im.data[i]=im.data[i+1]=im.data[i+2]=v;im.data[i+3]=255}gx.putImageData(im,0,0)}
+grain();
+let can,drag,off,tilt,drops,splash,bubbles,water,wet,shown,done,t,squish,boil,mouse,look;
+function reset(){can={x:Math.max(100,W*0.22),y:H*0.28};drag=false;off={x:0,y:0};tilt=0;drops=[];splash=[];bubbles=[];water=0;wet=0;shown=0;done=false;t=0;squish=0;boil=0;mouse={x:cx,y:0};look=0}
+reset();document.getElementById('reset').onclick=reset;
+const tip=()=>{const lx=-66,ly=-26,s=Math.sin(tilt),co=Math.cos(tilt);return{x:can.x+lx*co-ly*s,y:can.y+lx*s+ly*co}};
+const onCan=e=>Math.hypot(e.clientX-can.x,e.clientY-can.y)<62;
+c.addEventListener('pointerdown',e=>{if(onCan(e)){drag=true;off={x:e.clientX-can.x,y:e.clientY-can.y};c.setPointerCapture(e.pointerId)}});
+c.addEventListener('pointermove',e=>{mouse={x:e.clientX,y:e.clientY};c.style.cursor=drag?'grabbing':onCan(e)?'grab':'default';
+ if(drag){can.x=Math.min(W-50,Math.max(80,e.clientX-off.x));can.y=Math.min(gy-120,Math.max(60,e.clientY-off.y))}});
+const up=()=>drag=false;c.addEventListener('pointerup',up);c.addEventListener('pointercancel',up);
+const j=(k,a=1.5)=>(rnd(k+boil*7)-.5)*a*2;
+function drawCan(){x.save();x.translate(can.x,can.y);x.rotate(tilt);x.strokeStyle=C['--ink'];x.lineWidth=2.5;x.lineJoin='round';
+ x.fillStyle=C['--can'];
+ x.beginPath();x.moveTo(-30,-6);x.lineTo(-66+j(1),-28+j(2));x.lineTo(-62+j(3),-36+j(4));x.lineTo(-28,-20);x.closePath();x.fill();x.stroke();
+ x.beginPath();x.ellipse(-68,-32,4,7,-.5,0,7);x.fill();x.stroke(); // rose head
+ x.beginPath();x.moveTo(-34+j(5),-28);x.lineTo(34+j(6),-26);x.lineTo(30+j(7),28);x.lineTo(-30+j(8),30);x.closePath();x.fill();x.stroke();
+ x.fillStyle=C['--can-hi'];x.globalAlpha=.6;x.fillRect(-26,-22,8,46);x.globalAlpha=1;
+ x.fillStyle=C['--ink'];for(const [a,b] of[[-26,-20],[24,-20],[-24,24],[22,24]]){x.beginPath();x.arc(a,b,1.8,0,7);x.fill()} // rivets
+ x.globalAlpha=.5;x.lineWidth=1;x.beginPath();for(let k=0;k<6;k++){x.moveTo(6+k*4,16+j(9+k));x.lineTo(2+k*4,26)}x.stroke();x.globalAlpha=1; // rust hatching
+ x.lineWidth=6;x.strokeStyle=C['--ink'];x.beginPath();x.arc(32,0,20,-Math.PI/2,Math.PI/2);x.stroke();
+ x.lineWidth=3;x.strokeStyle=C['--can'];x.beginPath();x.arc(32,0,20,-Math.PI/2,Math.PI/2);x.stroke();
+ x.restore()}
+let last=performance.now(),gt=0,bt=0;
+function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;t+=dt;gt+=dt;bt+=dt;
+ if(gt>.09){grain();gt=0} if(bt>.16){boil++;bt=0}
+ tilt+=((drag?-.7:0)-tilt)*Math.min(1,dt*5);
+ if(drag&&tilt<-.45){const p=tip();for(let i=0;i<2;i++)drops.push({x:p.x+(Math.random()-.5)*6,y:p.y,vx:-40-Math.random()*30,vy:20+Math.random()*20})}
+ x.fillStyle=C['--bg'];x.fillRect(0,0,W,H);
+ // soil
+ x.beginPath();x.moveTo(0,H);for(let X=0;X<=W;X+=10)x.lineTo(X,gy+(rnd(X*.1+boil)-.5)*3-(Math.abs(X-cx)<80?squish*(1-Math.abs(X-cx)/80):0));x.lineTo(W,H);x.closePath();
+ x.fillStyle=C['--soil'];x.fill();x.strokeStyle=C['--ink'];x.lineWidth=2.5;x.stroke();
+ if(wet>0){x.fillStyle=C['--wet'];x.globalAlpha=Math.min(.9,wet);x.beginPath();x.ellipse(cx,gy+10,50+wet*35,12+wet*8,0,0,7);x.fill();x.globalAlpha=1}
+ // bubbles: the soil drinking
+ x.strokeStyle=C['--drop'];x.lineWidth=1;bubbles=bubbles.filter(b=>{b.l-=dt;b.r+=dt*4;x.globalAlpha=Math.max(0,b.l)*.7;x.beginPath();x.arc(b.x,b.y,b.r,0,7);x.stroke();x.globalAlpha=1;return b.l>0});
+ // crooked sprout
+ shown+=(water-shown)*Math.min(1,dt*3);
+ const gr=Math.min(1,shown),h=10+gr*150;
+ look+=((done?Math.max(-1,Math.min(1,(mouse.x-cx)/200)):0)-look)*Math.min(1,dt*3);
+ const tx=cx+Math.sin(t*1.1)*(done?2:4)+look*40,ty=gy-h;
+ x.strokeStyle=C['--ink'];x.lineWidth=7;x.lineCap='round';
+ const c1x=cx+30*gr,c1y=gy-h*.35,c2x=cx-34*gr,c2y=gy-h*.7;
+ x.beginPath();x.moveTo(cx,gy);x.bezierCurveTo(c1x,c1y,c2x,c2y,tx,ty);x.stroke();
+ x.strokeStyle=C['--stem'];x.lineWidth=3.5;x.beginPath();x.moveTo(cx,gy);x.bezierCurveTo(c1x,c1y,c2x,c2y,tx,ty);x.stroke();
+ // curled tip that turns toward you when it's done
+ if(gr>.3){const k=(gr-.3)/.7;x.strokeStyle=C['--ink'];x.lineWidth=2.5;x.beginPath();
+  for(let s=0;s<=1;s+=.05){const a=s*Math.PI*2.2*k,r=14*k*(1-s*.7),px=tx+(look>=0?1:-1)*(Math.sin(a)*r),py=ty-Math.cos(a)*r+r;s?x.lineTo(px,py):x.moveTo(px,py)}x.stroke()}
+ // leaves
+ const leaf=Math.max(0,(gr-.2)/.8);
+ if(leaf>0){for(const [s,yy] of[[-1,.45],[1,.62]]){const lx=cx+(s<0?14:-12)*gr,ly=gy-h*yy;x.save();x.translate(lx,ly);x.rotate(s*(1.6-leaf*.7)+Math.sin(t+s)*.05);
+  x.beginPath();x.moveTo(0,0);x.bezierCurveTo(-11*leaf+j(20+s),-10*leaf,-8*leaf,-28*leaf,j(22+s),-34*leaf);x.bezierCurveTo(8*leaf,-28*leaf,11*leaf+j(24+s),-10*leaf,0,0);
+  x.fillStyle=C['--leaf'];x.fill();x.strokeStyle=C['--ink'];x.lineWidth=2;x.stroke();
+  x.lineWidth=1;x.beginPath();x.moveTo(0,-2);x.lineTo(0,-30*leaf);x.stroke();x.restore()}}
+ // drops
+ x.fillStyle=C['--drop'];
+ drops=drops.filter(d=>{d.vy+=520*dt;d.x+=d.vx*dt;d.y+=d.vy*dt;
+  if(d.y>=gy){if(Math.abs(d.x-cx)<75){if(!done){water=Math.min(1,water+.004);wet=Math.min(1.2,wet+.01);squish=Math.min(5,squish+.4);if(Math.random()<.15)bubbles.push({x:cx+(Math.random()-.5)*90,y:gy+8+Math.random()*10,r:1.5,l:.8})}}
+   else{for(let i=0;i<3;i++)splash.push({x:d.x,y:gy,vx:(Math.random()-.5)*90,vy:-60-Math.random()*60,l:.4})}
+   return false}
+  x.beginPath();x.ellipse(d.x,d.y,2,3.5,0,0,7);x.fill();return d.y<H});
+ splash=splash.filter(s=>{s.vy+=500*dt;s.x+=s.vx*dt;s.y+=s.vy*dt;s.l-=dt;x.globalAlpha=Math.max(0,s.l*2.5);x.fillRect(s.x,s.y,2,2);x.globalAlpha=1;return s.l>0});
+ squish*=Math.pow(.02,dt);
+ if(!drag)wet=Math.max(water*.55,wet-dt*.05);
+ if(water>=1&&!done)done=true;
+ drawCan();
+ const vg=x.createRadialGradient(W/2,H*.5,Math.min(W,H)*.2,W/2,H*.5,Math.max(W,H)*.75);
+ vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.85)');x.fillStyle=vg;x.fillRect(0,0,W,H);
+ x.globalAlpha=.07;x.fillStyle=x.createPattern(g,'repeat');x.fillRect(0,0,W,H);x.globalAlpha=1;
+ requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+</script>
+
+<a id="next" href="../03-wake-the-flower/index.html" hidden>Wake the flower →</a>
+<a id="home" href="../index.html" aria-label="Back to the garden">✦</a>
+<style>
+#next{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);padding:10px 22px;border:1px solid #4a4846;border-radius:999px;background:#232221;color:#cfcdc9;font:15px Georgia,serif;font-style:italic;text-decoration:none;animation:nextIn 1.2s ease-out both}
+#next:focus-visible,#home:focus-visible{outline:2px solid #cfcdc9;outline-offset:2px}
+#home{position:fixed;left:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:40px;height:40px;display:grid;place-items:center;border-radius:50%;border:1px solid #4a4846;background:#232221;color:#cfcdc9;font-size:16px;text-decoration:none}
+@keyframes nextIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+</style>
+<script>
+// Sequencing: once the study's `done` flag is set, let its ending play, then offer the next scene.
+(()=>{const n=document.getElementById('next');let since=0;
+ setInterval(()=>{if(!done){since=0;n.hidden=true;return}if(!since)since=Date.now();if(Date.now()-since>4000)n.hidden=false},250)})();
+</script>
+</body></html>
