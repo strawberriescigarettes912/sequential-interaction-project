@@ -1,20 +1,60 @@
-/* One dark look on purpose (as in the studies): dim room, vignette, film grain, shaky ink lines. Grayscale only. */
+/* The Enchanted Garden — Rusty Lake look: a dim room, one warm lamp, rust and bone, shaky ink lines.
+   Scene colours live in settings.js (editable from the tool panel); this file styles the page chrome. */
 :root{
-  --bg:#161514;--ink:#070707;--ground:#0e0d0d;
-  --soil:#3b3937;--soil-hi:#55524f;--grain:#8f8c88;--wet:#1f1e1d;
-  --seed:#9b9894;--sclera:#d9d7d3;
-  --can:#6e6b67;--can-hi:#8f8c88;--drop:#a9a6a2;
-  --stem:#7d7a76;--leaf:#9b9894;
-  --petal:#8e8c89;--petal-back:#5e5c5a;--petal-hi:#b9b7b3;--dust:#a8a6a2;
-  --btn:#232221;--btn-fg:#cfcdc9;
+  --page:#17120d;--btn:#241a12;--btn-line:#5a4128;--btn-fg:#e8dcc0;--accent:#d4b06a;
+  --panel:#1c1510;--panel-line:#3a2a1c;--panel-fg:#d9ccb0;--panel-dim:#8a7a62;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
-body{background:var(--bg);overflow:hidden;font:14px -apple-system,BlinkMacSystemFont,sans-serif}
+body{background:var(--page);overflow:hidden;font:14px -apple-system,BlinkMacSystemFont,sans-serif}
 canvas{display:block;width:100%;height:100%;touch-action:none}
-#reset{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:40px;height:40px;border-radius:50%;border:1px solid #4a4846;background:var(--btn);color:var(--btn-fg);font-size:18px;cursor:pointer}
-#reset:focus-visible{outline:2px solid var(--btn-fg);outline-offset:2px}
-#hint{position:fixed;left:50%;bottom:calc(26px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);margin:0;max-width:calc(100% - 140px);text-align:center;
-  font:italic 16px Georgia,"Times New Roman",serif;letter-spacing:.04em;color:var(--btn-fg);opacity:0;transition:opacity 1.2s;pointer-events:none;white-space:nowrap}
-#hint.on{opacity:.55}
+
+#reset{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:42px;height:42px;border-radius:50%;
+  border:1px solid var(--btn-line);background:var(--btn);color:var(--btn-fg);font-size:18px;cursor:pointer;transition:box-shadow .6s,transform .3s}
+#reset:hover{transform:rotate(-40deg)}
+#reset:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#reset.call{animation:call 2.4s ease-in-out infinite}
+@keyframes call{50%{box-shadow:0 0 0 6px rgba(212,176,106,.18),0 0 24px rgba(212,176,106,.35)}}
+
+#hint{position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);margin:0;max-width:calc(100% - 140px);text-align:center;
+  font:italic 17px "Cormorant Garamond",Georgia,"Times New Roman",serif;letter-spacing:.06em;color:var(--btn-fg);opacity:0;transition:opacity 1.2s;pointer-events:none;white-space:nowrap}
+#hint.on{opacity:.7}
+
+/* title card at the start, closing line at the end */
+#card{position:fixed;left:0;right:0;top:16vh;text-align:center;pointer-events:none;color:var(--btn-fg);opacity:0;transition:opacity 2s}
+#card.on{opacity:1}
+#card.end{top:auto;bottom:calc(9vh + env(safe-area-inset-bottom,0px))}
+body.panel-on #card{padding-left:min(310px,40vw)}
+#card h1{margin:0;font:italic 500 clamp(2.4rem,7vw,4.6rem) "Cormorant Garamond",Georgia,serif;letter-spacing:.02em;
+  text-shadow:0 0 18px rgba(242,200,121,.35),0 2px 10px #000}
+#card p{margin:.5em 0 0;font:italic 18px "Cormorant Garamond",Georgia,serif;color:var(--accent);opacity:.8;letter-spacing:.08em}
+
+/* ---- tool panel ---- */
+#panel{position:fixed;left:12px;top:12px;bottom:12px;width:286px;display:none;flex-direction:column;z-index:5;
+  background:var(--panel);border:1px solid var(--panel-line);border-radius:6px;color:var(--panel-fg);
+  font:11px/1.3 ui-monospace,"SF Mono",Menlo,Consolas,monospace;box-shadow:0 10px 40px rgba(0,0,0,.6)}
+#panel.on{display:flex}
+#panel header{display:flex;justify-content:space-between;align-items:center;padding:9px 10px;border-bottom:1px solid var(--panel-line);letter-spacing:.12em;color:var(--accent)}
+#panel header button{background:none;border:0;color:var(--panel-dim);font-size:18px;cursor:pointer;line-height:1}
+#panel .jump{display:flex;gap:4px;align-items:center;padding:7px 10px;border-bottom:1px solid var(--panel-line);color:var(--panel-dim)}
+#panel .jump span{margin-right:auto;letter-spacing:.1em}
+#panel .jump button{min-width:30px;padding:3px 6px;border:1px solid var(--panel-line);border-radius:3px;background:#120d09;color:var(--panel-fg);font:inherit;cursor:pointer}
+#panel .jump button:hover{border-color:var(--accent)}
+#pBody{flex:1;overflow-y:auto;padding:2px 0}
+#panel details{border-bottom:1px solid var(--panel-line)}
+#panel summary{padding:8px 10px;cursor:pointer;letter-spacing:.1em;text-transform:uppercase;color:var(--panel-dim)}
+#panel summary:hover{color:var(--panel-fg)}
+#panel .row{display:grid;grid-template-columns:1fr 104px 44px;align-items:center;gap:6px;padding:3px 10px}
+#panel .row:has(input[type=color]){grid-template-columns:1fr 40px 62px}
+#panel .sw{display:none}
+#panel input[type=range]{width:100%;accent-color:var(--accent)}
+#panel input[type=color]{width:40px;height:16px;padding:0;border:1px solid #000;border-radius:2px;background:none;cursor:pointer}
+#panel input[type=color]::-webkit-color-swatch-wrapper{padding:0}
+#panel input[type=color]::-webkit-color-swatch{border:0}
+#panel input[type=color]::-moz-color-swatch{border:0}
+#panel code{color:var(--panel-dim);font:inherit;text-align:right;overflow:hidden}
+#panel footer{display:flex;gap:6px;padding:9px 10px;border-top:1px solid var(--panel-line)}
+#panel footer button{flex:1;padding:7px 4px;border-radius:3px;font:inherit;cursor:pointer;border:1px solid var(--panel-line);background:#120d09;color:var(--panel-fg)}
+#panel footer #pCopy{background:var(--accent);color:#1a120a;border-color:var(--accent);font-weight:600}
+@media (max-width:640px){#panel{width:auto;right:12px;top:auto;height:55vh}}

@@ -4,12 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>The Enchanted Garden</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<canvas id="c" aria-label="A seed lying on a mound of soil in a dark room"></canvas>
+<canvas id="c" aria-label="A seed lying on a mound of soil in a dim room"></canvas>
+<div id="card"><h1 id="cardTitle">The Enchanted Garden</h1><p id="cardSub">something is waiting in the soil</p></div>
 <p id="hint" aria-live="polite"></p>
 <button id="reset" aria-label="Start over">↺</button>
+<script src="settings.js"></script>
+<script src="panel.js"></script>
 <script src="main.js"></script>
 </body>
 </html>
